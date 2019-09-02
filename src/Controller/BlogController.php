@@ -1,7 +1,7 @@
-
 <?php
 // src/Controller/BlogController.php
 namespace App\Controller;
+
 use App\Entity\Article;
 use App\Entity\Category;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -63,9 +63,7 @@ class BlogController extends AbstractController
             ->findOneByName($categoryName);
             
         $limit=3;    
-        $articles = $this->getDoctrine()
-            ->getRepository(Article::class)
-            ->findByCategory($category,['id' => 'DESC'], $limit);
+        $articles = $category->getArticle();
         return $this->render('/blog/category.html.twig', ['articles' => $articles,'category' => $category,]
         
         );
