@@ -1,3 +1,4 @@
+
 <?php
 // src/Controller/BlogController.php
 namespace App\Controller;
@@ -17,14 +18,8 @@ class BlogController extends AbstractController
  * @Route("/", name="index")
  * 
  */
- 
-
-
-
  public function index(): Response
  {
-
-    
       $articles = $this->getDoctrine()
           ->getRepository(Article::class)
           ->findAll();
@@ -39,55 +34,40 @@ class BlogController extends AbstractController
       );
 }
     /**
- * Getting a article with a formatted slug for title
- *
- * @param string $slug The slugger
- *
- * @Route("/{slug<^[a-z0-9-]+$>}",
- *     defaults={"slug" = null},
- *     name="blog_show")
- *  @return Response A response instance
- */
- public function show(?string $slug) : Response
- {
-     if (!$slug) {
-            throw $this
-            ->createNotFoundException('No slug has been sent to find an article in article\'s table.');
-        }
-
-     $slug = preg_replace(
-      '/-/',
-      ' ', ucwords(trim(strip_tags($slug)), "-")
-        );
-
-     $article = $this->getDoctrine()
-            ->getRepository(Article::class)
-            ->findOneBy(['title' => mb_strtolower($slug)]);
-
-     if (!$article) {
-          throw $this->createNotFoundException(
-          'No article with '.$slug.' title, found in article\'s table.'
-      );
+     * @Route("/show/{slug}",
+     *          methods={"GET"},
+     *          requirements={"slug"="[a-z0-9\-]+"},
+     *          defaults={"slug"="article-sans-titre"},
+     *          name="show")
+     */
+    public function show(string $slug)
+    {
+        $cleanSlug = ucwords(trim(str_replace('-',' ',$slug)));
+    
+        return $this->render('/blog/show.html.twig',['cleanSlug'=>$cleanSlug]);
     }
-
-     return $this->render(
-     'blog/show.html.twig',
-      [
-              'article' => $article,
-              'slug' => $slug,
-      ]
-    );
-}
-class BlogController extends AbstractController
-{
-/**
- * Show all row from category's entity
- *
- * @Route("/category/{category}", name="show_category")
- * 
- */
-public function showByCategory(string $categoryName) : Response
- $category = $this->getDoctrine()
-       ->getRepository(Category::class)
-       ->findOneBy(['title' => mb_strtolower($slug)]);
+   /**
+     * @Route("/category/{categoryName}",
+     *          methods={"GET"},
+     *          name="show_category")
+     */
+   public function showByCategory(string $categoryName) : Response
+    {
+        if (!$categoryName) {
+            throw $this
+                ->createNotFoundException('No category\'s name has been sent to find articles in article\'s table.');
+        }
+        
+        $category = $this->getDoctrine()
+            ->getRepository(Category::class)
+            ->findOneByName($categoryName);
+            
+        $limit=3;    
+        $articles = $this->getDoctrine()
+            ->getRepository(Article::class)
+            ->findByCategory($category,['id' => 'DESC'], $limit);
+        return $this->render('/blog/category.html.twig', ['articles' => $articles,'category' => $category,]
+        
+        );
+    }   
 }
